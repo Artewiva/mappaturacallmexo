@@ -30,6 +30,7 @@ import { CandidateSheet, Register } from "./components/register";
 import { ImportPanel } from "./components/importer";
 import { PdfExportModal } from "./components/pdf-exporter";
 import { ArrowLink, Button, Panel, Reveal, SectionHead, SectorLegend, Stat } from "./components/ui";
+import { MexoHeroVinyl, MexoLogo } from "./components/mexo-logo";
 import { cn } from "./utils/cn";
 
 const STEPS = [
@@ -122,29 +123,30 @@ export function App() {
       {/* ------------------------------------------------------------ header */}
       <header className="sticky top-0 z-40 border-b border-white/8 bg-[#090e14]/88 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex gap-[3px]">
-              {SECTORS.map((s, i) => (
-                <span
-                  key={s.key}
-                  className="h-3.5 w-3.5 rounded-[2px]"
-                  style={{
-                    background: s.color,
-                    opacity: sectors.length && !sectors.includes(s.key) ? 0.25 : 1,
-                    animation: `tilein .5s ease-out ${i * 90}ms both`,
-                  }}
-                />
-              ))}
-            </div>
-            <div>
-              <div className="font-display text-[19px] leading-none font-extrabold tracking-[0.14em] text-bone">
-                MOSAIC
+          <a href="#" className="flex items-center gap-3 rounded-[2px] focus-ring">
+            <MexoLogo variant="dark" size="md" className="h-10 sm:h-[42px]" />
+            <div className="hidden items-center gap-2 border-l border-white/10 pl-3 sm:flex">
+              <div className="flex gap-[3px]">
+                {SECTORS.map((s, i) => (
+                  <span
+                    key={s.key}
+                    className="h-2.5 w-2.5 rounded-[1px] sm:h-3 sm:w-3 sm:rounded-[2px]"
+                    style={{
+                      background: s.color,
+                      opacity: sectors.length && !sectors.includes(s.key) ? 0.25 : 1,
+                      animation: `tilein .5s ease-out ${i * 90}ms both`,
+                    }}
+                  />
+                ))}
               </div>
-              <div className="font-mono text-[9px] tracking-[0.2em] text-ash uppercase">
-                monitoraggio candidature
+              <div className="hidden lg:block">
+                <div className="font-mono text-[9px] tracking-[0.2em] text-ash uppercase">
+                  monitoraggio candidature
+                </div>
+                <div className="font-mono text-[9px] tracking-[0.14em] text-ash/60">Mosaic Exhibition Orchestra</div>
               </div>
             </div>
-          </div>
+          </a>
 
           <div className="hidden items-center gap-2 border-l border-white/10 pl-5 lg:flex">
             <span
@@ -220,6 +222,16 @@ export function App() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-24 sm:px-6">
+        {/* --------------------------------------------------- MEXO poster hero (dal file Storia Mexo.jpg) */}
+        <section className="pt-6 sm:pt-8">
+          <MexoHeroVinyl />
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 font-mono text-[10px] tracking-[0.16em] text-ash/60 uppercase">
+            <span className="flex items-center gap-1.5"><span className="h-px w-6 bg-white/15" /> MEXO Poster ufficiale</span>
+            <span className="hidden h-1 w-1 rounded-full bg-white/20 sm:block" />
+            <span>Open call for artist · Mosaic Exhibition Orchestra</span>
+          </div>
+        </section>
+
         {/* ---------------------------------------------------------- hero */}
         <section className="grid items-end gap-8 py-10 lg:grid-cols-12 lg:py-14">
           <div className="lg:col-span-6 xl:col-span-5">
@@ -419,6 +431,116 @@ export function App() {
           />
         </section>
 
+        {/* ----------------------------------------------- manifesto MEXO (poster Storia) */}
+        <section id="manifesto" className="scroll-mt-24 pt-16">
+          <SectionHead
+            index="06"
+            kicker="il manifesto — open call for artist"
+            title={
+              <>
+                MEXO è una giovane orchestra
+                <br />
+                senza schemi dove la musica accade.
+              </>
+            }
+            hint="Il poster ufficiale dell'Open Call MEXO — Mosaic Exhibition Orchestra. L'immagine originale (Storia) è integrata nel cruscotto e nel dossier PDF."
+          />
+          <div className="grid gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-5">
+              <Panel hover={false} className="overflow-hidden p-0">
+                <img
+                  src="/assets/mexo-poster.jpg"
+                  alt="Poster ufficiale MEXO — Open Call For Artist, vinile oro e M mosaic"
+                  className="h-auto w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="flex items-center justify-between border-t border-white/8 bg-[#0a1017] px-3 py-2.5">
+                  <span className="font-mono text-[10px] tracking-[0.16em] text-ash uppercase">
+                    Storia ufficiale · 1080×1920
+                  </span>
+                  <a
+                    href="/assets/mexo-poster.jpg"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-mono text-[10px] tracking-[0.14em] text-musicista uppercase hover:text-bone"
+                  >
+                    apri poster ↗
+                  </a>
+                </div>
+              </Panel>
+            </div>
+            <div className="lg:col-span-7 space-y-4">
+              <Panel hover={false} className="p-5 sm:p-6">
+                <div className="mb-3 flex items-center gap-2">
+                  <MexoLogo variant="dark" size="md" className="h-9" />
+                  <span className="font-mono text-[10px] tracking-[0.2em] text-musicista uppercase">open call</span>
+                </div>
+                <h3 className="font-display text-[22px] font-extrabold leading-tight tracking-tight text-bone sm:text-[24px]">
+                  Partecipa alla call MEXO.
+                  <br />
+                  <span className="text-ash">Cinque linguaggi, un unico mosaico.</span>
+                </h3>
+                <p className="mt-3 text-[13.5px] leading-relaxed text-ash">
+                  MEXO — Mosaic Exhibition Orchestra cerca musicisti, performer, dj/producer, visual artist e figure
+                  ibride per una giovane orchestra senza schemi. Il poster che vedi è l'identità visiva ufficiale:
+                  il vinile oro al centro, la <span className="text-bone">M</span> a mosaico con le tessere
+                  colorate dei cinque settori e <span className="text-musicista">EXO</span> in arancio. Ogni
+                  candidatura che entra nel cruscotto è una tessera che compone questo mosaico.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <a
+                    href={`https://docs.google.com/forms/d/${FORM_ID}/viewform`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 bg-musicista px-4 py-2.5 font-mono text-[11px] font-semibold tracking-[0.14em] text-ink-950 uppercase hover:bg-[#f0ad4a]"
+                  >
+                    partecipa alla call <ExternalLink size={12} />
+                  </a>
+                  <Button icon={Download} onClick={() => setPdfOpen(true)}>
+                    scarica dossier con logo MEXO
+                  </Button>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2 font-mono text-[10px] tracking-[0.14em] text-ash/70 uppercase">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-[1px] bg-[#e9a23b]" /> Mosaic
+                  </span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-[1px] bg-[#e05a45]" /> Performer
+                  </span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-[1px] bg-[#21b3a4]" /> DJ
+                  </span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-[1px] bg-[#5f8fd9]" /> Visual
+                  </span>
+                </div>
+              </Panel>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Panel hover={false} className="p-4">
+                  <div className="font-mono text-[10px] tracking-[0.2em] text-musicista uppercase">Il logo</div>
+                  <div className="mt-2 font-display text-[14px] font-bold text-bone">M mosaic + EXO arancio</div>
+                  <p className="mt-1 text-[12.5px] leading-relaxed text-ash">
+                    La <span className="text-bone">M</span> è riempita con il pattern a mosaico estratto dagli angoli del poster;
+                    le tre lettere <span className="text-musicista">EXO</span> in arancio #e9a23b richiamano il settore Musicista.
+                    Sotto, il lettering <span className="text-bone">MOSAIC EXHIBITION ORCHESTRA</span>.
+                  </p>
+                </Panel>
+                <Panel hover={false} className="p-4">
+                  <div className="font-mono text-[10px] tracking-[0.2em] text-musicista uppercase">Nel PDF</div>
+                  <div className="mt-2 font-display text-[14px] font-bold text-bone">Logo su ogni pagina</div>
+                  <p className="mt-1 text-[12.5px] leading-relaxed text-ash">
+                    Il dossier esportato impagina il logo MEXO in testata (prima pagina), nelle intestazioni delle pagine
+                    successive e nel piè di pagina con numerazione. Temi chiaro e scuro mantengono il logo leggibile.
+                  </p>
+                </Panel>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ------------------------------------------------------------- fonte */}
         <section className="pt-16">
           <SectionHead
@@ -517,21 +639,51 @@ export function App() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-white/8 py-8">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-6 gap-y-3 px-4 sm:px-6">
-          <span className="font-display text-[13px] font-extrabold tracking-[0.16em] text-bone">MOSAIC</span>
-          <span className="font-mono text-[10.5px] text-ash">
-            cruscotto non ufficiale · le risposte restano di chi le ha scritte
-          </span>
+      <footer className="relative z-10 border-t border-white/8 bg-[#070b10]/60 py-8 backdrop-blur">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-6 gap-y-5 px-4 sm:px-6">
+          <div className="flex items-center gap-4">
+            <MexoLogo variant="dark" size="md" className="h-9" />
+            <div className="hidden h-8 w-px bg-white/10 sm:block" />
+            <span className="hidden font-mono text-[10.5px] leading-tight text-ash sm:block">
+              cruscotto non ufficiale
+              <br />
+              le risposte restano di chi le ha scritte
+            </span>
+            <span className="font-mono text-[10.5px] text-ash sm:hidden">cruscotto non ufficiale</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-ash">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-[1px] bg-[#e9a23b]" /> Musicista
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-[1px] bg-[#e05a45]" /> Performer
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-[1px] bg-[#21b3a4]" /> DJ
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-[1px] bg-[#5f8fd9]" /> Visual
+            </span>
+          </div>
           <a
             href={`https://docs.google.com/forms/d/${FORM_ID}/viewform`}
             target="_blank"
             rel="noreferrer"
-            className="focus-ring ml-auto font-mono text-[10.5px] tracking-[0.14em] text-ash uppercase transition-colors hover:text-bone"
+            className="focus-ring ml-auto inline-flex items-center gap-1.5 font-mono text-[10.5px] tracking-[0.14em] text-ash uppercase transition-colors hover:text-bone"
           >
             apri il modulo
-            <ExternalLink size={12} className="inline -mt-0.5" />
+            <ExternalLink size={12} className="-mt-0.5" />
           </a>
+        </div>
+        <div className="mx-auto mt-6 max-w-[1400px] px-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/6 pt-4 font-mono text-[10px] tracking-[0.14em] text-ash/60 uppercase">
+            <span>© {new Date().getFullYear()} MEXO — Mosaic Exhibition Orchestra</span>
+            <span className="flex items-center gap-2">
+              <span>Una giovane orchestra senza schemi dove la musica accade.</span>
+              <span className="hidden h-1 w-1 rounded-full bg-ash/40 sm:inline-block" />
+              <span className="text-[#e9a23b]">Open call for artist</span>
+            </span>
+          </div>
         </div>
       </footer>
 
