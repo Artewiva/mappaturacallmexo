@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Download,
+  FileText,
   RefreshCw,
   ExternalLink,
   Link2,
@@ -27,6 +28,7 @@ import { SectorMatrix } from "./components/sectors";
 import { OverviewGrid } from "./components/overview";
 import { CandidateSheet, Register } from "./components/register";
 import { ImportPanel } from "./components/importer";
+import { PdfExportModal } from "./components/pdf-exporter";
 import { ArrowLink, Button, Panel, Reveal, SectionHead, SectorLegend, Stat } from "./components/ui";
 import { cn } from "./utils/cn";
 
@@ -45,9 +47,9 @@ const STEPS = [
   },
   {
     n: "03",
-    tag: "privacy",
-    t: "Nessun dato lascia il browser",
-    d: "Stati, voti e note della segreteria vivono in localStorage su questa macchina. Il modulo non viene modificato e l'esportazione CSV resta nelle tue mani.",
+    tag: "privacy e stampa",
+    t: "Dossier PDF e dati in locale",
+    d: "Stati, voti e note della segreteria vivono in localStorage su questa macchina. L'esportazione CSV e l'impaginazione PDF avvengono interamente nel browser.",
   },
 ];
 
@@ -61,6 +63,7 @@ export function App() {
   const [sort, setSort] = useState<"recenti" | "anziani" | "voto" | "nome">("recenti");
   const [openC, setOpenC] = useState<Candidate | null>(null);
   const [modal, setModal] = useState<null | "csv" | "foglio" | "manuale">(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [auto, setAuto] = useState(false);
@@ -191,7 +194,7 @@ export function App() {
               <span className="hidden md:inline">candidatura</span>
             </Button>
             <Button
-              variant="solid"
+              variant="quiet"
               icon={Download}
               onClick={() => {
                 download(
@@ -202,7 +205,15 @@ export function App() {
               }}
               title="Esporta il registro in CSV"
             >
-              <span className="hidden lg:inline">esporta</span>
+              <span className="hidden xl:inline">csv</span>
+            </Button>
+            <Button
+              variant="solid"
+              icon={FileText}
+              onClick={() => setPdfOpen(true)}
+              title="Esporta dossier impaginato in PDF"
+            >
+              <span className="hidden sm:inline">esporta pdf</span>
             </Button>
           </div>
         </div>
@@ -372,7 +383,10 @@ export function App() {
             title="Chi ha risposto, cosa facciamo"
             hint={`Stai valutando ${filtered.length} risposte su ${list.length}. Stato, voto e note restano qui: il modulo non viene toccato.`}
             right={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button icon={FileText} onClick={() => setPdfOpen(true)} title="Impagina ed esporta in PDF">
+                  dossier pdf
+                </Button>
                 <Button
                   variant="quiet"
                   icon={RotateCcw}
@@ -401,6 +415,7 @@ export function App() {
             setSort={setSort}
             onPatch={store.upsert}
             onOpen={setOpenC}
+            onOpenPdf={() => setPdfOpen(true)}
           />
         </section>
 
@@ -447,6 +462,9 @@ export function App() {
                 </Button>
                 <Button variant="quiet" icon={Upload} onClick={() => setModal("csv")}>
                   importa csv
+                </Button>
+                <Button variant="quiet" icon={FileText} onClick={() => setPdfOpen(true)}>
+                  esporta pdf
                 </Button>
                 <span className="mx-1 hidden h-4 w-px bg-white/12 sm:block" />
                 <Button
@@ -545,6 +563,17 @@ export function App() {
         onSync={sync}
         syncing={syncing}
         lastSync={lastSync}
+      />
+
+      <PdfExportModal
+        open={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        filtered={filtered}
+        all={list}
+        activeSectors={sectors}
+        activeStatuses={statuses}
+        searchQuery={query}
+        onDone={flash}
       />
 
       <div

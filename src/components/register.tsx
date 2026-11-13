@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, ExternalLink, Mail, MapPin, Phone, Search, Trash2, X, ChevronDown } from "lucide-react";
+import { Download, ExternalLink, FileText, Mail, MapPin, Phone, Search, Trash2, X, ChevronDown } from "lucide-react";
 import {
   Candidate,
   SECTORS,
@@ -11,6 +11,7 @@ import {
   relative,
 } from "../lib/model";
 import { toCsv, download } from "../lib/data";
+import { saveSingleCandidatePdf } from "../lib/pdf";
 import { Chip, Meter, Panel, SECTOR_ICON, Stars, StatusPill } from "./ui";
 import { cn } from "../utils/cn";
 
@@ -202,6 +203,14 @@ export function CandidateSheet({
           >
             <Trash2 size={14} /> Scarta
           </button>
+          <button
+            type="button"
+            onClick={() => saveSingleCandidatePdf(c)}
+            className="focus-ring flex items-center gap-1.5 border border-white/14 bg-ink-800/80 px-3 py-2 text-[12px] text-bone transition-colors hover:border-musicista/60 hover:text-musicista"
+            title="Scarica la scheda di questo candidato in PDF impaginato"
+          >
+            <FileText size={14} /> Scheda PDF
+          </button>
           <span className="ml-auto font-mono text-[10px] text-ash">id {c.id.slice(0, 8)}</span>
         </footer>
       </aside>
@@ -224,6 +233,7 @@ export function Register({
   setSort,
   onPatch,
   onOpen,
+  onOpenPdf,
 }: {
   list: Candidate[];
   all: Candidate[];
@@ -237,6 +247,7 @@ export function Register({
   setSort: (v: "recenti" | "anziani" | "voto" | "nome") => void;
   onPatch: (patch: Partial<Candidate> & { id: string }) => void;
   onOpen: (c: Candidate) => void;
+  onOpenPdf: () => void;
 }) {
   const [limit, setLimit] = useState(28);
   const shown = list.slice(0, limit);
@@ -286,6 +297,14 @@ export function Register({
             </select>
             <ChevronDown size={13} className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-ash" />
           </div>
+          <button
+            type="button"
+            onClick={onOpenPdf}
+            className="focus-ring flex items-center gap-1.5 border border-musicista/45 bg-musicista/12 px-2.5 py-2 font-mono text-[10.5px] tracking-[0.1em] text-musicista uppercase transition-colors hover:bg-musicista/22 hover:text-bone"
+            title="Impagina ed esporta le candidature in formato PDF"
+          >
+            <FileText size={13} /> pdf
+          </button>
           <button
             onClick={() => download(`mosaic-candidature-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(list.length ? list : all))}
             className="focus-ring flex items-center gap-1.5 border border-white/10 px-2.5 py-2 font-mono text-[10.5px] tracking-[0.1em] text-ash uppercase transition-colors hover:border-white/25 hover:text-bone"
