@@ -12,6 +12,7 @@ import {
   pct,
 } from "./model";
 import { cityRanking, globalStats, sectorStats } from "./store";
+import { MEXO_LOGO_DARK_B64, MEXO_LOGO_LIGHT_B64 } from "./mexo-assets";
 
 export type PdfOrientation = "portrait" | "landscape";
 export type PdfScope = "filtrate" | "tutte";
@@ -100,6 +101,32 @@ const PALETTES: Record<PdfExportOptions["theme"], Palette> = {
     ok: { r: 99, g: 192, b: 127 },
   },
 };
+
+function addMExoLogo(
+  doc: jsPDF,
+  imgData: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  try {
+    // jsPDF addImage needs base64 without prefix? but our B64 includes prefix data:image/png;base64,
+    // addImage can handle it directly with format "PNG"
+    doc.addImage(imgData, "PNG", x, y, w, h, undefined, "FAST");
+  } catch (e) {
+    // fallback: disegna testo MEXO semplice
+    try {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(233, 162, 59);
+      doc.text("MEXO", x, y + h * 0.65);
+      doc.setFontSize(5);
+      doc.setTextColor(236, 229, 216);
+      doc.text("MOSAIC EXHIBITION ORCHESTRA", x, y + h + 1.2);
+    } catch {}
+  }
+}
 
 function hexToRgb(hex: string): RGB {
   const clean = hex.replace("#", "").trim();
@@ -309,63 +336,59 @@ export function buildPdfDocument(ctx: PdfGenerationContext): jsPDF {
   /* ========================================================================
    * BANNER DI TESTATA DEL DOSSIER (Pagina 1)
    * ======================================================================== */
-  const bannerH = 38;
+  const bannerH = 42;
   setFill(doc, pal.headerBg);
-  doc.roundedRect(marginX, 12, contentW, bannerH, 1.5, 1.5, "F");
+  doc.roundedRect(marginX, 10.5, contentW, bannerH, 1.5, 1.5, "F");
 
-  // Striscia cromatica dei 5 settori in alto sul banner
+  // Striscia cromatica dei 5 settori in alto sul banner (identità MEXO)
   const segW = contentW / SECTORS.length;
   SECTORS.forEach((s, idx) => {
     setFill(doc, hexToRgb(s.color));
-    doc.rect(marginX + idx * segW, 12, segW, 2.2, "F");
+    doc.rect(marginX + idx * segW, 10.5, segW, 2.2, "F");
   });
 
-  // Tessere logo MOSAIC
-  SECTORS.forEach((s, idx) => {
-    setFill(doc, hexToRgb(s.color));
-    doc.roundedRect(marginX + 6 + idx * 4.4, 18, 3.3, 3.3, 0.5, 0.5, "F");
-  });
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(236, 229, 216);
-  doc.text("MOSAIC EXHIBITION ORCHESTRA", marginX + 30, 20.8);
+  // === LOGO MEXO ufficiale (M mosaic + EXO arancio + subtitle) ===
+  // Estratto dal poster Storia Mexo.jpg — M con pattern mosaic authentico + EXO #e9a23b
+  // Per testata scura usiamo sempre variante dark (testo chiaro)
+  const logoW = 36;
+  const logoH = logoW / 3.26; // aspect 684/210
+  addMExoLogo(doc, MEXO_LOGO_DARK_B64, marginX + 5, 14.2, logoW, logoH);
 
   doc.setFont("courier", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(147, 163, 179);
-  doc.text(pdfSafe(`GENERATO IL ${dateLabel.toUpperCase()}`), pageW - marginX - 6, 20.8, {
+  doc.text(pdfSafe(`MEXO · GENERATO IL ${dateLabel.toUpperCase()}`), pageW - marginX - 6, 18.6, {
     align: "right",
   });
 
-  // Titolo dossier
+  // Titolo dossier (sotto al logo MEXO)
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16.5);
+  doc.setFontSize(13.5);
   doc.setTextColor(236, 229, 216);
   const titleLines = doc.splitTextToSize(pdfSafe(opts.title || FORM_TITLE), contentW - 12);
-  doc.text(titleLines.slice(0, 2), marginX + 6, 29.5);
+  doc.text(titleLines.slice(0, 2), marginX + 6, 30.2);
 
   // Sottotitolo + perimetro
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.3);
+  doc.setFontSize(7.8);
   doc.setTextColor(175, 188, 201);
   const subText = opts.subtitle ? `${opts.subtitle} — ${scopeSummary}` : scopeSummary;
   const subLines = doc.splitTextToSize(pdfSafe(subText), contentW - 12);
-  doc.text(subLines.slice(0, 2), marginX + 6, titleLines.length > 1 ? 39.5 : 36);
+  doc.text(subLines.slice(0, 2), marginX + 6, titleLines.length > 1 ? 38.8 : 35.2);
 
-  // Metadati in basso nel banner
+  // Metadati in basso nel banner (con tratto MEXO)
   doc.setFont("courier", "normal");
-  doc.setFontSize(7);
+  doc.setFontSize(6.8);
   doc.setTextColor(233, 162, 59);
   doc.text(
     pdfSafe(
-      `MODULO: ${FORM_TITLE.toUpperCase()}  |  SETTORI COPERTI: ${g.settoriCoperti}/${SECTORS.length}  |  CITTA: ${g.citta}`,
+      `MEXO · ${FORM_TITLE.toUpperCase()} · SETTORI ${g.settoriCoperti}/${SECTORS.length} · CITTA ${g.citta}`,
     ),
     marginX + 6,
-    46.8,
+    48.5,
   );
 
-  y = 56;
+  y = 58;
 
   if (list.length === 0) {
     setFill(doc, pal.cardBg);
@@ -1213,26 +1236,22 @@ export function buildPdfDocument(ctx: PdfGenerationContext): jsPDF {
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
 
-    // Intestazione corrente per le pagine successive alla prima
+    // Intestazione corrente per le pagine successive alla prima — con logo MEXO
     if (p > 1) {
       setStroke(doc, pal.border);
       doc.setLineWidth(0.25);
       doc.line(marginX, 14.5, pageW - marginX, 14.5);
 
-      SECTORS.forEach((s, idx) => {
-        setFill(doc, hexToRgb(s.color));
-        doc.rect(marginX + idx * 3.1, 9.6, 2.3, 2.3, "F");
-      });
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      setText(doc, pal.ink);
-      doc.text("MOSAIC", marginX + 17.5, 11.6);
+      // Logo MEXO ridotto (scelta variante in base al tema carta)
+      const headerLogoData = opts.theme === "dark" ? MEXO_LOGO_DARK_B64 : MEXO_LOGO_LIGHT_B64;
+      const hLogoW = 14;
+      const hLogoH = hLogoW / 3.26;
+      addMExoLogo(doc, headerLogoData, marginX, 7.2, hLogoW, hLogoH);
 
       doc.setFont("courier", "normal");
-      doc.setFontSize(6.8);
+      doc.setFontSize(6.6);
       setText(doc, pal.muted);
-      doc.text(pdfSafe(`· ${opts.title || FORM_TITLE}`), marginX + 30, 11.6);
+      doc.text(pdfSafe(`· ${opts.title || FORM_TITLE}`), marginX + hLogoW + 3, 11.4);
 
       doc.setFont("courier", "bold");
       doc.setFontSize(6.8);
@@ -1246,12 +1265,18 @@ export function buildPdfDocument(ctx: PdfGenerationContext): jsPDF {
     doc.setLineWidth(0.22);
     doc.line(marginX, footY - 3.5, pageW - marginX, footY - 3.5);
 
+    // Logo MEXO nel piè di pagina (piccolo, a sinistra del testo)
+    const footerLogoData = opts.theme === "dark" ? MEXO_LOGO_DARK_B64 : MEXO_LOGO_LIGHT_B64;
+    const fLogoW = 10;
+    const fLogoH = fLogoW / 3.26;
+    addMExoLogo(doc, footerLogoData, marginX, footY - 3.6, fLogoW, fLogoH);
+
     doc.setFont("courier", "normal");
-    doc.setFontSize(6.8);
+    doc.setFontSize(6.6);
     setText(doc, pal.muted);
     doc.text(
-      pdfSafe(`MOSAIC · ${FORM_TITLE} · Generato in locale il ${dateLabel}`),
-      marginX,
+      pdfSafe(`  MEXO · ${FORM_TITLE} · Generato in locale il ${dateLabel}`),
+      marginX + fLogoW + 2,
       footY,
     );
 
