@@ -51,9 +51,20 @@ function collectRecipients(candidates: Candidate[]): RecipientSet {
   };
 }
 
-function createMailto(emails: string[], subject: string, body: string) {
-  const bcc = emails.map((email) => encodeURIComponent(email)).join(",");
-  return `mailto:?bcc=${bcc}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+/**
+ * Prepara l'URL di composizione di Gmail: apre una bozza con oggetto, testo
+ * e destinatari in CCN (bcc), senza inviare nulla.
+ * Usa l'endpoint classico "view=cm" di mail.google.com.
+ */
+function createGmailComposeUrl(emails: string[], subject: string, body: string) {
+  const params = new URLSearchParams({
+    view: "cm",
+    fs: "1",
+    su: subject,
+    body,
+    bcc: emails.join(","),
+  });
+  return `https://mail.google.com/mail/?${params.toString()}`;
 }
 
 async function copyText(text: string) {
@@ -100,8 +111,10 @@ export function EmailComposer({
   const target = scope === "selezionati" ? selectedSet : allSet;
   const targetCandidates = scope === "selezionati" ? selected.length : all.length;
   const emails = target.recipients.map((recipient) => recipient.email);
-  const mailto = createMailto(emails, subject, body);
-  const isLargeDraft = mailto.length > 1800;
+  const gmailUrl = createGmailComposeUrl(emails, subject, body);
+  // Oltre ~1800 caratteri alcuni browser/servizi potrebbero troncare l'URL:
+  // in quel caso avvisiamo l'utente e suggeriamo il copia-incolla degli indirizzi.
+  const isLargeDraft = gmailUrl.length > 1800;
 
   useEffect(() => {
     if (!open) return;
@@ -131,10 +144,19 @@ export function EmailComposer({
     }
   };
 
-  const handleOpenEmailApp = () => {
+  const handleOpenGmail = () => {
     if (!emails.length) return;
-    window.location.href = mailto;
-    onDone(`Bozza preparata per ${emails.length} ${emails.length === 1 ? "destinatario" : "destinatari"}.`);
+    // Apertura in una nuova scheda: il cruscotto resta aperto e i dati
+    // (in localStorage) non vengono persi. Il click diretto dell'utente
+    // evita il blocco dei popup; se comunque il browser lo impedisce,
+    // ripieghiamo sulla scheda corrente.
+    const gmailWindow = window.open(gmailUrl, "_blank", "noopener,noreferrer");
+    if (!gmailWindow) {
+      window.location.href = gmailUrl;
+    }
+    onDone(
+      `Bozza Gmail preparata per ${emails.length} ${emails.length === 1 ? "destinatario" : "destinatari"}: completa e invia da Gmail.`,
+    );
     onClose();
   };
 
@@ -297,13 +319,13 @@ export function EmailComposer({
           <div className="flex items-start gap-2.5 border border-ok/20 bg-ok/[0.06] p-3">
             <ShieldCheck size={15} className="mt-0.5 shrink-0 text-ok" />
             <p className="text-[11.5px] leading-relaxed text-ash">
-              Gli indirizzi sono inseriti in <strong className="text-bone">CCN</strong>: ogni destinatario vedrà solo il proprio. Il cruscotto prepara la bozza nel programma email del dispositivo, ma non invia nulla senza la tua conferma.
+              Gli indirizzi sono inseriti in <strong className="text-bone">CCN</strong>: ogni destinatario vedrà solo il proprio. Il cruscotto apre la bozza già compilata in <strong className="text-bone">Gmail</strong> (serve un account Google collegato), ma non invia nulla senza la tua conferma.
             </p>
           </div>
 
           {isLargeDraft && (
             <p className="border-l-2 border-warn pl-3 text-[11.5px] leading-relaxed text-warn">
-              La lista è lunga: alcuni programmi email potrebbero limitare il numero di destinatari. Se la bozza non li include tutti, usa “copia indirizzi” e incollali nel campo CCN.
+              La lista è lunga: Gmail potrebbe non includere tutti i destinatari nella bozza. Se manca qualcuno, usa “copia indirizzi” e incollali nel campo CCN di Gmail.
             </p>
           )}
         </div>
@@ -317,10 +339,10 @@ export function EmailComposer({
           <button
             type="button"
             disabled={!emails.length}
-            onClick={handleOpenEmailApp}
+            onClick={handleOpenGmail}
             className="focus-ring inline-flex items-center gap-2 bg-bone px-4 py-2.5 font-mono text-[11px] font-semibold tracking-[0.13em] text-ink-950 uppercase transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Send size={14} /> apri nell'app email <ExternalLink size={11} />
+            <Send size={14} /> apri in Gmail <ExternalLink size={11} />
           </button>
         </footer>
       </div>
