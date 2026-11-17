@@ -383,7 +383,7 @@ export function App() {
             index="04"
             kicker="registro candidature"
             title="Chi ha risposto, cosa facciamo"
-            hint={`Stai valutando ${filtered.length} risposte su ${list.length}. Stato, voto e note restano qui: il modulo non viene toccato.`}
+            hint={`Stai valutando ${filtered.length} risposte su ${list.length}. Seleziona le persone dal registro per scrivere solo a loro, oppure prepara un'email per tutti gli iscritti.`}
             right={
               <div className="flex flex-wrap items-center gap-2">
                 <Button icon={FileText} onClick={() => setPdfOpen(true)} title="Impagina ed esporta in PDF">
@@ -418,6 +418,7 @@ export function App() {
             onPatch={store.upsert}
             onOpen={setOpenC}
             onOpenPdf={() => setPdfOpen(true)}
+            onDone={flash}
           />
         </section>
 
