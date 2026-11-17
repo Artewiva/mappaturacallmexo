@@ -30,7 +30,7 @@ import { CandidateSheet, Register } from "./components/register";
 import { ImportPanel } from "./components/importer";
 import { PdfExportModal } from "./components/pdf-exporter";
 import { ArrowLink, Button, Panel, Reveal, SectionHead, SectorLegend, Stat } from "./components/ui";
-import { MexoHeroVinyl, MexoLogo } from "./components/mexo-logo";
+import { MexoLogo } from "./components/mexo-logo";
 import { cn } from "./utils/cn";
 
 const STEPS = [
@@ -222,16 +222,6 @@ export function App() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-24 sm:px-6">
-        {/* --------------------------------------------------- MEXO poster hero (dal file Storia Mexo.jpg) */}
-        <section className="pt-6 sm:pt-8">
-          <MexoHeroVinyl />
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 font-mono text-[10px] tracking-[0.16em] text-ash/60 uppercase">
-            <span className="flex items-center gap-1.5"><span className="h-px w-6 bg-white/15" /> MEXO Poster ufficiale</span>
-            <span className="hidden h-1 w-1 rounded-full bg-white/20 sm:block" />
-            <span>Open call for artist · Mosaic Exhibition Orchestra</span>
-          </div>
-        </section>
-
         {/* ---------------------------------------------------------- hero */}
         <section className="grid items-end gap-8 py-10 lg:grid-cols-12 lg:py-14">
           <div className="lg:col-span-6 xl:col-span-5">
