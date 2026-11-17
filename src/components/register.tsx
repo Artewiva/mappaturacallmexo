@@ -1,5 +1,19 @@
-import { useEffect, useState } from "react";
-import { Download, ExternalLink, FileText, Mail, MapPin, Phone, Search, Trash2, X, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Check,
+  ChevronDown,
+  Download,
+  ExternalLink,
+  FileText,
+  Mail,
+  MapPin,
+  Minus,
+  Phone,
+  Search,
+  Trash2,
+  UserCheck,
+  X,
+} from "lucide-react";
 import {
   Candidate,
   SECTORS,
@@ -13,6 +27,7 @@ import {
 import { toCsv, download } from "../lib/data";
 import { saveSingleCandidatePdf } from "../lib/pdf";
 import { Chip, Meter, Panel, SECTOR_ICON, Stars, StatusPill } from "./ui";
+import { EmailComposer } from "./email-composer";
 import { cn } from "../utils/cn";
 
 /* ------------------------------------------------------------------ drawer */
@@ -220,6 +235,40 @@ export function CandidateSheet({
 
 /* ------------------------------------------------------------------ registro */
 
+function SelectionBox({
+  checked,
+  mixed = false,
+  onToggle,
+  label,
+}: {
+  checked: boolean;
+  mixed?: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={mixed ? "mixed" : checked}
+      aria-label={label}
+      title={label}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+      className={cn(
+        "focus-ring flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border transition-colors",
+        checked || mixed
+          ? "border-musicista bg-musicista text-ink-950"
+          : "border-white/25 bg-ink-900 text-transparent hover:border-musicista/70",
+      )}
+    >
+      {mixed ? <Minus size={11} strokeWidth={3} /> : checked ? <Check size={11} strokeWidth={3} /> : null}
+    </button>
+  );
+}
+
 export function Register({
   list,
   all,
@@ -234,6 +283,7 @@ export function Register({
   onPatch,
   onOpen,
   onOpenPdf,
+  onDone,
 }: {
   list: Candidate[];
   all: Candidate[];
@@ -248,9 +298,46 @@ export function Register({
   onPatch: (patch: Partial<Candidate> & { id: string }) => void;
   onOpen: (c: Candidate) => void;
   onOpenPdf: () => void;
+  onDone: (message: string) => void;
 }) {
   const [limit, setLimit] = useState(28);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [emailOpen, setEmailOpen] = useState(false);
   const shown = list.slice(0, limit);
+  const selectedCandidates = useMemo(
+    () => all.filter((candidate) => selectedIds.has(candidate.id)),
+    [all, selectedIds],
+  );
+  const selectedInList = list.filter((candidate) => selectedIds.has(candidate.id)).length;
+  const allInListSelected = list.length > 0 && selectedInList === list.length;
+  const someInListSelected = selectedInList > 0 && !allInListSelected;
+
+  useEffect(() => {
+    const availableIds = new Set(all.map((candidate) => candidate.id));
+    setSelectedIds((previous) => {
+      const next = new Set([...previous].filter((id) => availableIds.has(id)));
+      return next.size === previous.size ? previous : next;
+    });
+  }, [all]);
+
+  const toggleCandidate = (id: string) => {
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleCurrentList = () => {
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      if (allInListSelected) list.forEach((candidate) => next.delete(candidate.id));
+      else list.forEach((candidate) => next.add(candidate.id));
+      return next;
+    });
+  };
+
   const resetFilters = () => {
     setQuery("");
     SECTORS.forEach((s) => sectors.includes(s.key) && toggleSector(s.key));
@@ -258,7 +345,8 @@ export function Register({
   };
 
   return (
-    <Panel hover={false}>
+    <>
+      <Panel hover={false}>
       <div className="flex flex-col gap-3 border-b border-white/8 p-4 lg:flex-row lg:items-center sm:p-5">
         <label className="group relative flex min-w-0 flex-1 items-center">
           <Search size={14} className="absolute left-3 text-ash transition-colors group-focus-within:text-musicista" />
@@ -299,6 +387,24 @@ export function Register({
           </div>
           <button
             type="button"
+            onClick={() => setEmailOpen(true)}
+            className={cn(
+              "focus-ring flex items-center gap-1.5 border px-2.5 py-2 font-mono text-[10.5px] tracking-[0.1em] uppercase transition-colors",
+              selectedIds.size
+                ? "border-dj/55 bg-dj/12 text-dj hover:bg-dj/22 hover:text-bone"
+                : "border-white/10 text-ash hover:border-dj/55 hover:text-bone",
+            )}
+            title="Scrivi a tutti gli iscritti o soltanto a quelli selezionati"
+          >
+            <Mail size={13} /> email
+            {!!selectedIds.size && (
+              <span className="min-w-4 bg-dj px-1 py-0.5 text-center text-[9px] leading-none text-ink-950">
+                {selectedIds.size}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
             onClick={onOpenPdf}
             className="focus-ring flex items-center gap-1.5 border border-musicista/45 bg-musicista/12 px-2.5 py-2 font-mono text-[10.5px] tracking-[0.1em] text-musicista uppercase transition-colors hover:bg-musicista/22 hover:text-bone"
             title="Impagina ed esporta le candidature in formato PDF"
@@ -315,7 +421,59 @@ export function Register({
         </div>
       </div>
 
-      <div className="hidden grid-cols-[92px_minmax(160px,1.5fr)_120px_minmax(130px,1fr)_150px_120px_28px] gap-3 border-b border-white/8 px-4 py-2.5 font-mono text-[9.5px] tracking-[0.16em] text-ash uppercase lg:grid">
+      {!!selectedIds.size && (
+        <div className="flex flex-wrap items-center gap-3 border-b border-dj/20 bg-dj/[0.06] px-4 py-2.5 sm:px-5">
+          <UserCheck size={14} className="text-dj" />
+          <span className="font-mono text-[10.5px] text-bone">
+            <strong>{selectedIds.size}</strong> {selectedIds.size === 1 ? "iscritto selezionato" : "iscritti selezionati"}
+          </span>
+          <span className="hidden text-[11px] text-ash sm:inline">
+            La selezione resta attiva mentre cambi filtri.
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="focus-ring px-2 py-1 font-mono text-[9.5px] tracking-[0.12em] text-ash uppercase hover:text-bone"
+            >
+              deseleziona
+            </button>
+            <button
+              type="button"
+              onClick={() => setEmailOpen(true)}
+              className="focus-ring inline-flex items-center gap-1.5 bg-dj px-3 py-1.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-ink-950 uppercase hover:bg-[#3bc7b9]"
+            >
+              <Mail size={12} /> scrivi ai selezionati
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!!list.length && (
+        <div className="flex items-center gap-2 border-b border-white/8 px-4 py-2.5 lg:hidden">
+          <SelectionBox
+            checked={allInListSelected}
+            mixed={someInListSelected}
+            onToggle={toggleCurrentList}
+            label={allInListSelected ? "Deseleziona tutti i risultati" : `Seleziona tutti i ${list.length} risultati`}
+          />
+          <button
+            type="button"
+            onClick={toggleCurrentList}
+            className="focus-ring font-mono text-[9.5px] tracking-[0.13em] text-ash uppercase hover:text-bone"
+          >
+            {allInListSelected ? "deseleziona i risultati" : `seleziona i ${list.length} risultati`}
+          </button>
+        </div>
+      )}
+
+      <div className="hidden grid-cols-[26px_92px_minmax(160px,1.5fr)_120px_minmax(130px,1fr)_150px_120px_28px] gap-3 border-b border-white/8 px-4 py-2.5 font-mono text-[9.5px] tracking-[0.16em] text-ash uppercase lg:grid">
+        <SelectionBox
+          checked={allInListSelected}
+          mixed={someInListSelected}
+          onToggle={toggleCurrentList}
+          label={allInListSelected ? "Deseleziona tutti i risultati" : `Seleziona tutti i ${list.length} risultati`}
+        />
         <span>data</span>
         <span>nome · contatto</span>
         <span>città</span>
@@ -333,11 +491,17 @@ export function Register({
               key={c.id}
               onClick={() => onOpen(c)}
               className={cn(
-                "group grid cursor-pointer grid-cols-[1fr_auto] items-center gap-3 border-b border-white/5 px-4 py-3 transition-colors duration-200 hover:bg-white/4 lg:grid-cols-[92px_minmax(160px,1.5fr)_120px_minmax(130px,1fr)_150px_120px_28px]",
+                "group grid cursor-pointer grid-cols-[26px_minmax(0,1fr)_auto] items-center gap-3 border-b border-white/5 px-4 py-3 transition-colors duration-200 hover:bg-white/4 lg:grid-cols-[26px_92px_minmax(160px,1.5fr)_120px_minmax(130px,1fr)_150px_120px_28px]",
                 i % 2 ? "bg-white/[0.012]" : "",
+                selectedIds.has(c.id) && "bg-dj/[0.055] hover:bg-dj/[0.085]",
               )}
               style={{ animation: `rowin .4s cubic-bezier(.2,.8,.2,1) ${Math.min(i, 16) * 22}ms both` }}
             >
+              <SelectionBox
+                checked={selectedIds.has(c.id)}
+                onToggle={() => toggleCandidate(c.id)}
+                label={selectedIds.has(c.id) ? `Deseleziona ${c.nome}` : `Seleziona ${c.nome}`}
+              />
               <span className="hidden font-mono text-[11px] text-ash lg:block">{fmtDate(c.timestamp)}</span>
               <span className="min-w-0">
                 <span className="block truncate font-display text-[14.5px] font-semibold text-bone group-hover:text-musicista">
@@ -406,6 +570,15 @@ export function Register({
           </span>
         </div>
       )}
-    </Panel>
+      </Panel>
+
+      <EmailComposer
+        open={emailOpen}
+        onClose={() => setEmailOpen(false)}
+        all={all}
+        selected={selectedCandidates}
+        onDone={onDone}
+      />
+    </>
   );
 }
